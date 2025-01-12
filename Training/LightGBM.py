@@ -50,7 +50,8 @@ class LightGBMModel:
             scaler = StandardScaler()
             self.X_scaled = scaler.fit_transform(self.X)
         else:
-            self.X_scaled = self.X  # No scaling for 'decimal' and 'raw'
+            self.X_scaled = self.X  
+            
 
     def balance_classes(self):
         smote = SMOTE(random_state=42)
@@ -64,9 +65,9 @@ class LightGBMModel:
             max_depth=self.max_depth,
             learning_rate=self.learning_rate,
             n_estimators=self.n_estimators,
-            num_leaves=2 ** self.max_depth - 1,  # Ensure sufficient splits
-            min_data_in_leaf=10,  # Avoid empty leaves
-            verbose=-1  # Suppress LightGBM internal logs
+            num_leaves=2 ** self.max_depth - 1,  
+            min_data_in_leaf=10,  
+            verbose=-1  
         )
         self.model.fit(X_train, y_train)
         y_pred = self.model.predict(X_test)
