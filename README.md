@@ -1,4 +1,4 @@
-#**Mobile price classification**#
+#Mobile price classification#
 
 **Student/s Name:**
 **Enkel Shehdula**
