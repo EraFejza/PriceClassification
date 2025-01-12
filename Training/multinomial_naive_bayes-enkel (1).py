@@ -1,9 +1,12 @@
+import matplotlib
+matplotlib.use('TkAgg')
+
 import pandas as pd
+import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.preprocessing import MinMaxScaler
-
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, accuracy_score
 
 def train_naive_bayes_model(file_path, train_split):
     data = pd.read_csv(file_path)
@@ -21,8 +24,14 @@ def train_naive_bayes_model(file_path, train_split):
     accuracy = accuracy_score(y_test, y_predict)
     print(f"Accuracy: {accuracy}")
 
+    # Calculate and display the confusion matrix
+    cm = confusion_matrix(y_test, y_predict)
+    disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=model.classes_)
+    disp.plot(cmap="coolwarm")
+    plt.title("Confusion Matrix - Train Data")
+    # plt.show()
 
-def naive_bayes_model(dataset="raw", normalization="raw", train_split=0.8):
+def naive_bayes_model(dataset="raw", normalization="raw", train_split=0.5):
     file_mapping = {
         "feature_engineered": f"../Normalized_Datasets/Train/train_{normalization}_scaled.csv",
         "original": f"../Normalized_Datasets/Train/raw_{normalization}_scaled.csv",
@@ -33,7 +42,6 @@ def naive_bayes_model(dataset="raw", normalization="raw", train_split=0.8):
         train_naive_bayes_model(file_mapping[dataset], train_split)
     else:
         raise Exception("No such dataset!")
-
 
 def run_naive_bayes_combinations(datasets, normalizations=None):
     for dataset in datasets:
@@ -46,7 +54,6 @@ def run_naive_bayes_combinations(datasets, normalizations=None):
             print(f"Running {dataset}")
             naive_bayes_model(dataset=dataset)
             print("---")
-
 
 if __name__ == "__main__":
     datasets = ["original", "feature_engineered"]
