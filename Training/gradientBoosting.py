@@ -6,7 +6,7 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import StandardScaler
 import os
 
-class GradientBoost:
+class GradientBoosting:
 
     def __init__(self, normalized_dataset_path, raw_dataset_path, max_depth=None, n_estimators=100, learning_rate=0.1):
         self.normalized_dataset_path = normalized_dataset_path
@@ -85,9 +85,9 @@ class GradientBoost:
 if __name__ == "__main__":
     normalized_dataset_path = '../Normalized_Datasets'
     raw_dataset_path = '../Raw Datasets'
-    gradient_boosting_model = GradientBoost(normalized_dataset_path, raw_dataset_path, max_depth=7)
+    gradient_boosting_model = GradientBoosting(normalized_dataset_path, raw_dataset_path, max_depth=7)
     gradient_boosting_model.run_pipeline()
 
     # Best Settings:
     # GradientBoosting with raw, max_depth=3, n_estimators=200, learning_rate=0.2
-    # Accuracy: 93.50% for all
+    # Accuracy: 93.50%
