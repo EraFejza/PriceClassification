@@ -4,6 +4,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
 
+#implementing SVM
 def train_svm_model(file_path, train_split, kernel, degree):
     data = pd.read_csv(file_path)
     x = data.iloc[:, :-1]
@@ -15,7 +16,7 @@ def train_svm_model(file_path, train_split, kernel, degree):
     accuracy = accuracy_score(y_test, y_predict)
     print(f"Accuracy: {accuracy}")
 
-
+#using 7 datsets, 3 feature engineereed, 3 original with normalization and 1 raw with no normalization
 def svm_model(dataset="raw", normalization="raw", train_split=0.8, kernel="rbf", degree=0):
     file_mapping = {
         "feature_engineered": f"../Normalized_Datasets/Train/train_{normalization}_scaled.csv",
@@ -28,7 +29,8 @@ def svm_model(dataset="raw", normalization="raw", train_split=0.8, kernel="rbf",
     else:
         raise Exception("No such dataset!")
 
-
+#a loop to try every combination with datasets, degrees, kernels in order to have a better chance of getting
+#the best accuracy
 def run_svm_combinations(datasets, kernels, degrees, normalizations=None):
     for dataset in datasets:
         for kernel in kernels:
@@ -51,13 +53,12 @@ if __name__ == "__main__":
     kernels = ["linear", "poly", "rbf", "sigmoid"]
     degrees = [0, 2, 3, 4]  # Degree 0 implies default handling for non-poly kernels
 
-    # Run combinations for datasets with normalization
+    # Running combinations for datasets
     run_svm_combinations(datasets, kernels, degrees, normalizations)
 
     run_svm_combinations(dataset_raw, kernels, degrees)
 
     ''' Best Combination:
-    
         Dataset: original
         Normalization: z_score
         Kernel: linear
