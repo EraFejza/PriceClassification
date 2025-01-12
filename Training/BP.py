@@ -1,93 +1,84 @@
 import numpy as np
 import pandas as pd
-from sklearn.model_selection import GridSearchCV
+import matplotlib.pyplot as plt
+import seaborn as sns
 from sklearn.metrics import accuracy_score
-from sklearn.base import BaseEstimator, ClassifierMixin
 
-class NeuralNetwork(BaseEstimator, ClassifierMixin):
-    def __init__(self, input_size=None, hidden_size=4, output_size=1, learning_rate=0.1, epochs=10000):
-        self.input_size = input_size
-        self.hidden_size = hidden_size
-        self.output_size = output_size
-        self.learning_rate = learning_rate
-        self.epochs = epochs
+# Initialize parameters
+np.random.seed(0)  # For reproducibility
+momentum = 0.9
+learning_rate_start = 0.001
+learning_rate_end = 0.00005
+n_epochs = 100
+batch_size = 32
 
-        self.weights_input_hidden = None
-        self.weights_hidden_output = None
+# Load CSV file (replace 'training_data.csv' with your actual CSV filename)
+data = pd.read_csv(f'../Normalized_Datasets/Train/raw_z_score_scaled.csv')
 
-        self.bias_hidden = None
-        self.bias_output = None
+# Split data into features and target
+X_train = data.iloc[:, :-1].values  # All columns except the last (target)
+y_train = data.iloc[:, -1].values  # Only the last column (target)
 
-    def sigmoid(self, x):
-        return 1 / (1 + np.exp(-x))
+# Initialize weights and bias
+n_features = X_train.shape[1]  # Number of features
+weights = np.random.rand(n_features, 1)
+bias = np.random.rand(1)
 
-    def sigmoid_derivative(self, x):
-        return x * (1 - x)
+# Initialize momentum terms
+velocity_w = np.zeros_like(weights)
+velocity_b = np.zeros_like(bias)
 
-    def fit(self, X, y):
-        self.input_size = X.shape[1]
 
-        self.weights_input_hidden = np.random.randn(self.input_size, self.hidden_size)
-        self.weights_hidden_output = np.random.randn(self.hidden_size, self.output_size)
+# Mock gradient calculation function (replace with your actual gradient calculation)
+def compute_gradients(X_batch, y_batch, weights, bias):
+    # Placeholder for gradient calculation logic based on X_batch and y_batch
+    grad_w = np.random.rand(weights.shape[0], 1)  # Placeholder gradients
+    grad_b = np.random.rand(1)  # Placeholder gradients
+    return grad_w, grad_b
 
-        self.bias_hidden = np.zeros((1, self.hidden_size))
-        self.bias_output = np.zeros((1, self.output_size))
 
-        for epoch in range(self.epochs):
-            output = self.feedforward(X)
-            self.backward(X, y, self.learning_rate)
+# Adaptive learning rate schedule
+def adaptive_lr(epoch):
+    # Adaptive learning rate decays from 0.001 to 0.00005 over epochs
+    lr = learning_rate_start - (epoch * (learning_rate_start - learning_rate_end) / n_epochs)
+    return lr
 
-    def feedforward(self, X):
-        self.hidden_activation = np.dot(X, self.weights_input_hidden) + self.bias_hidden
-        self.hidden_output = self.sigmoid(self.hidden_activation)
 
-        # Hidden to output
-        self.output_activation = np.dot(self.hidden_output, self.weights_hidden_output) + self.bias_output
-        self.predicted_output = self.sigmoid(self.output_activation)
+# Training loop
+for epoch in range(n_epochs):
+    # Shuffle data and create mini-batches
+    permutation = np.random.permutation(X_train.shape[0])
+    X_shuffled = X_train[permutation]
+    y_shuffled = y_train[permutation]
 
-        return self.predicted_output
+    for batch_start in range(0, X_train.shape[0], batch_size):
+        X_batch = X_shuffled[batch_start:batch_start + batch_size]
+        y_batch = y_shuffled[batch_start:batch_start + batch_size]
 
-    def backward(self, X, y, learning_rate):
-        output_error = y - self.predicted_output
-        output_delta = output_error * self.sigmoid_derivative(self.predicted_output)
+        # Compute gradients
+        grad_w, grad_b = compute_gradients(X_batch, y_batch, weights, bias)
 
-        hidden_error = np.dot(output_delta, self.weights_hidden_output.T)
-        hidden_delta = hidden_error * self.sigmoid_derivative(self.hidden_output)
+        # Update weights with momentum and adaptive learning rate
+        velocity_w = momentum * velocity_w - adaptive_lr(epoch) * grad_w
+        velocity_b = momentum * velocity_b - adaptive_lr(epoch) * grad_b
+        weights += velocity_w
+        bias += velocity_b
 
-        self.weights_hidden_output += np.dot(self.hidden_output.T, output_delta) * learning_rate
-        self.bias_output += np.sum(output_delta, axis=0, keepdims=True) * learning_rate
-        self.weights_input_hidden += np.dot(X.T, hidden_delta) * learning_rate
-        self.bias_hidden += np.sum(hidden_delta, axis=0, keepdims=True) * learning_rate
+    print(f'Epoch {epoch + 1}/{n_epochs}, Learning Rate: {adaptive_lr(epoch)}')
 
-    def predict(self, X):
-        predictions = self.feedforward(X)
-        return (predictions > 0.5).astype(int)
+# After training, weights and bias will be updated
+print("Final weights:", weights)
+print("Final bias:", bias)
 
-    def score(self, X, y):
-        predictions = self.predict(X)
-        return accuracy_score(y, predictions)
+# Load Test Data
+test_data = pd.read_csv(f'../Normalized_Datasets/Test/raw_z_score_scaled.csv')
+X_test = test_data.iloc[:, :-1].values  # All columns except the last (target)
+y_test = test_data.iloc[:, -1].values  # Only the last column (target)
 
-dataset = pd.read_csv('../Normalized_Datasets/Train/raw_z_score_scaled.csv')
-X = dataset.iloc[:, :-1].values  # Features
-y = dataset.iloc[:, -1].values.reshape(-1, 1)  # Target
+# Make predictions on test data
+predictions = np.dot(X_test, weights) + bias  # Linear combination
+predictions = (predictions >= 0.5).astype(int)  # Convert probabilities to binary predictions
 
-param_grid = {
-    'hidden_size': [1],
-    'learning_rate': [0.1],
-    'epochs': [2000]
-}
-
-nn = NeuralNetwork(input_size=X.shape[1])
-
-grid_search = GridSearchCV(nn, param_grid, cv=3, scoring='accuracy', verbose=2)
-grid_search.fit(X, y)
-
-print("Best parameters found:", grid_search.best_params_)
-print("Best accuracy:", grid_search.best_score_)
-
-best_nn = grid_search.best_estimator_
-output = best_nn.predict(X)
-accuracy = best_nn.score(X, y)
-print("Predictions after training:")
-print(output)
-print(f"Accuracy: {accuracy:.2f}")
+# Calculate accuracy
+accuracy = accuracy_score(y_test, predictions)
+print(f'Test Accuracy: {accuracy * 100:.2f}%')

@@ -16,7 +16,7 @@ param_grid = {
     'penalty': ['l1', 'l2', 'elasticnet'],
     'C': [0.001, 0.01, 0.1, 1, 10],
     'solver': ['saga'],
-    'max_iter': [200, 300, 500],
+    'max_iter': [200, 300, 500, 2000],
     'l1_ratio': [0.5, 0.7, 0.9]
 }
 
